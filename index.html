@@ -80,23 +80,29 @@
       "잊고 싶은데 잊을 수 없는"
     ];
 
+    const UNSPLASH_ACCESS_KEY = xOuOTRl5rRGfLR6nJclmqX4efk7dclCIoX5Ua4n8AgA
+
     function getRandomItem(list) {
       return list[Math.floor(Math.random() * list.length)];
     }
 
     async function generatePoster() {
-      const diary = document.getElementById("diaryInput").value;
-      if (!diary.trim()) return;
+      const diary = document.getElementById("diaryInput").value.trim();
+      if (!diary) return;
+
+      const keyword = diary.split(" ")[0] || "emotion";
+
+      // Unsplash API 호출
+      const res = await fetch(`https://api.unsplash.com/photos/random?query=${keyword}&orientation=portrait&client_id=${UNSPLASH_ACCESS_KEY}`);
+      const data = await res.json();
+      const imageUrl = data?.urls?.regular || "https://images.unsplash.com/photo-1503264116251-35a269479413";
 
       const title = getRandomItem(titles);
       const subtitle = getRandomItem(subtitles);
 
-      const keyword = diary.split(" ")[0];
-      const response = await fetch(`https://source.unsplash.com/400x600/?${keyword},mood`);
-
       const posterDiv = document.createElement("div");
       posterDiv.className = "poster";
-      posterDiv.style.backgroundImage = `url(${response.url})`;
+      posterDiv.style.backgroundImage = `url(${imageUrl})`;
 
       const titleEl = document.createElement("div");
       titleEl.className = "poster-title";
