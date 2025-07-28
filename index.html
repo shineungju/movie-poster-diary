@@ -1,84 +1,58 @@
+
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>나만의 영화 포스터</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      padding: 20px;
-      text-align: center;
-      background-color: #111;
-      color: #fff;
-    }
-    textarea {
-      width: 90%;
-      height: 100px;
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    #poster {
-      margin-top: 20px;
-      position: relative;
-      display: inline-block;
-    }
-    #poster img {
-      width: 400px;
-      height: auto;
-      border-radius: 10px;
-    }
-    #poster h2 {
-      position: absolute;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      color: white;
-      text-shadow: 0 0 10px rgba(0,0,0,0.8);
-      font-size: 1.5rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Movie Poster Diary</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        textarea { width: 80%; height: 100px; margin-bottom: 20px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        img { margin-top: 20px; max-width: 400px; height: auto; border: 2px solid #ccc; }
+    </style>
 </head>
 <body>
-  <h1>오늘의 기분으로 영화 포스터 만들기</h1>
-  <textarea id="diary" placeholder="오늘 하루를 짧게 써보세요 :)"></textarea><br />
-  <button onclick="generatePoster()">포스터 생성</button>
+    <h1>🎬 나만의 무비 포스터 만들기</h1>
+    <p>오늘의 감정을 짧게 남겨보세요. 감정에 어울리는 영화 포스터를 만들어드려요!</p>
+    <textarea id="diary" placeholder="예: 오늘은 흐리고 마음도 좀 축축해..."></textarea><br>
+    <button onclick="generatePoster()">포스터 생성</button>
+    <div id="posterResult"></div>
 
-  <div id="poster"></div>
+    <script>
+        async function generatePoster() {
+            const input = document.getElementById('diary').value.trim();
+            if (!input) {
+                alert("내용을 입력해 주세요!");
+                return;
+            }
 
-  <script>
-    const UNSPLASH_ACCESS_KEY = "xOuOTRl5rRGfLR6nJclmqX4efk7dclCIoX5Ua4n8AgA";
+            const accessKey = "xOuOTRl5rRGfLR6nJclmqX4efk7dclCIoX5Ua4n8AgA";
+            const query = encodeURIComponent(input);
+            const url = `https://api.unsplash.com/search/photos?query=${query}&client_id=${accessKey}`;
 
-    async function generatePoster() {
-      const text = document.getElementById("diary").value;
-      if (!text) {
-        alert("일기를 먼저 작성해주세요!");
-        return;
-      }
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!data.results || data.results.length === 0) {
+                    document.getElementById("posterResult").innerHTML = "❌ 관련 이미지를 찾을 수 없어요.";
+                    return;
+                }
 
-      const mood = encodeURIComponent(text.split(" ").slice(-1)[0]);
-      const url = `https://api.unsplash.com/photos/random?query=${mood}&client_id=${UNSPLASH_ACCESS_KEY}`;
+                const image = data.results[0];
+                const downloadRes = await fetch(`${image.links.download_location}?client_id=${accessKey}`);
+                const downloadData = await downloadRes.json();
+                const imageUrl = downloadData.url;
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const imageUrl = data.urls.regular;
-
-        const posterDiv = document.getElementById("poster");
-        posterDiv.innerHTML = `
-          <img src="${imageUrl}" alt="poster" />
-          <h2>${text}</h2>
-        `;
-      } catch (error) {
-        alert("포스터 생성 중 오류가 발생했어요 😢");
-        console.error(error);
-      }
-    }
-  </script>
+                document.getElementById("posterResult").innerHTML = `
+                    <h2>🎞️ 당신의 무비 포스터</h2>
+                    <img src="${imageUrl}" alt="Generated Poster">
+                    <p><strong>키워드:</strong> ${query}</p>
+                `;
+            } catch (err) {
+                console.error(err);
+                document.getElementById("posterResult").innerHTML = "⚠️ 이미지 생성 중 오류가 발생했어요.";
+            }
+        }
+    </script>
 </body>
 </html>
